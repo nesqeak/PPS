@@ -207,6 +207,7 @@ const LOCALISATIONS = [
     },
   },
 
+  { id: 'sein', label: 'Sein', options: [], build: emptyBuild },
   { id: 'foie', label: 'Foie', options: [], build: emptyBuild },
   { id: 'pancreas', label: 'Pancréas', options: [], build: emptyBuild },
   { id: 'rectum', label: 'Rectum', options: [], build: emptyBuild },
