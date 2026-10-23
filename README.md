@@ -26,13 +26,17 @@ Aucune donnée n’est enregistrée ni envoyée : tout reste dans la page du nav
 | `js/app.js` | Écrans, formulaire et rendu du document |
 | `js/vendor/` | html2canvas 1.4.1 et jsPDF 2.5.1 (licence MIT), embarqués pour fonctionner hors ligne |
 
-### Compléter une localisation
+### Modifier une localisation
 
-Les localisations Crâne, Œsophage, Sein, Foie, Pancréas, Rectum, Canal anal, Prostate, Col de l’utérus,
-Endomètre et Autre n’ont pas encore de contenu spécifique. Pour en ajouter, renseigner dans
-`js/data.js` la liste `options` et la fonction `build(s)` de la localisation (voir ORL, Thyroïde
-ou Poumon comme modèles). En attendant, des effets secondaires et consignes peuvent être ajoutés
-manuellement depuis l’écran du PPS.
+Chaque localisation est décrite dans `js/data.js` : liste `options` (menu de sélection),
+`chemoAgents` (choix des molécules si chimiothérapie, facultatif) et fonction `build(s)` qui
+renvoie les examens, les effets secondaires (radiothérapie, chimiothérapie, hormonothérapie),
+la conduite à tenir, l’encart de consignes affiché au-dessus du schéma et la ligne de
+curiethérapie. Les libellés et explications des effets secondaires sont regroupés dans `FX`.
+
+La localisation « Autre » reprend les effets de la radiothérapie (hors chimiothérapie et
+hormonothérapie) des localisations de référence de chaque zone cochée : Crâne → Crâne,
+ORL → ORL, Thorax → Poumon, Abdomen → Pancréas, Pelvis → Rectum.
 
 ### Règles du calendrier
 

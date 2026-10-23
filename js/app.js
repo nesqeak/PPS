@@ -19,6 +19,7 @@ function newState() {
     dai: null,
     opts: {},
     agents: {},
+    freeExams: [''], // localisation « Autre »
     // Saisies du PPS
     patient: { nom: '', prenom: '', ddn: '' },
     medecin: '',
@@ -54,8 +55,11 @@ function rhythmLabel() {
 
 function chemoAgentsLabel() {
   const loc = getLoc();
-  if (!loc.chemoAgents) return '';
-  return loc.chemoAgents.filter((a) => state.agents[a.id]).map((a) => a.label).join(', ');
+  if (loc.chemoAgents) return loc.chemoAgents.filter((a) => state.agents[a.id]).map((a) => a.label).join(', ');
+  // Molécule implicite de la localisation (ex. Temodal pour le crâne)
+  return buildContent().systemic
+    .filter((g) => g.type === 'chimio' && g.name !== 'Chimiothérapie')
+    .map((g) => g.name).join(', ');
 }
 
 function radioGroup(name, options, value) {
@@ -199,11 +203,24 @@ function renderOptions() {
 
       ${loc.options.length ? `
         <fieldset class="field">
-          <legend class="label">Sélection (choix multiples possibles)</legend>
+          <legend class="label">${esc(loc.optionsLabel || 'Sélection (choix multiples possibles)')}</legend>
           ${checkboxList('opts', loc.options, state.opts)}
         </fieldset>` : `
         <p class="note">Aucune option spécifique n’est encore définie pour cette localisation.
         Les examens, effets secondaires et consignes pourront être complétés manuellement sur l’écran du PPS.</p>`}
+
+      ${loc.freeExams ? `
+        <fieldset class="field">
+          <legend class="label">Examens avant le début du traitement</legend>
+          <div class="free-list">
+            ${state.freeExams.map((e, i) => `
+              <div class="free-row">
+                <input type="text" data-free="${i}" value="${esc(e)}" placeholder="ex. : IRM, bilan dentaire…" aria-label="Examen ${i + 1}">
+                <button type="button" class="icon-btn" data-action="del-free" data-i="${i}" title="Supprimer">✕</button>
+              </div>`).join('')}
+          </div>
+          <button type="button" class="btn ghost small" data-action="add-free">+ Ajouter un examen</button>
+        </fieldset>` : ''}
 
       ${showAgents ? `
         <fieldset class="field">
@@ -231,7 +248,9 @@ function validateOptions() {
 
 function buildContent() {
   const loc = getLoc();
-  const r = loc.build({ rtType: state.rtType, chemo: state.chemo, opts: state.opts, agents: state.agents });
+  const r = loc.build({
+    rtType: state.rtType, chemo: state.chemo, opts: state.opts, agents: state.agents, freeExams: state.freeExams,
+  });
   const exams = [...r.exams];
   if (state.dai) {
     exams.push('Contrôle du DAI avant radiothérapie', 'Contrôle du DAI après la première séance', 'Contrôle du DAI en fin de traitement');
@@ -332,6 +351,15 @@ function renderEditor() {
       </div>`;
     }).join('')}
     <button type="button" class="btn ghost small" data-action="add-appt">+ Ajouter un rendez-vous avant traitement</button>
+    ${content.curie ? `
+    <div class="appt curie-appt">
+      <div class="appt-head"><strong>Curiethérapie</strong></div>
+      <div class="grid2">
+        <label>Date<input type="date" data-path="appts.curie.date" value="${esc(apptValue('curie').date)}"></label>
+        <label>Heure<input type="time" data-path="appts.curie.time" value="${esc(apptValue('curie').time)}"></label>
+      </div>
+      <label>Lieu<input data-path="appts.curie.lieu" value="${esc(apptValue('curie').lieu)}"></label>
+    </div>` : ''}
 
     <h2>Effets secondaires complémentaires</h2>
     ${state.extraEffects.map((e, i) => `
@@ -410,6 +438,22 @@ function fxRows(kindLabel, keys, extra) {
     </tr>`).join('');
 }
 
+function systemicTable(type, title, groups) {
+  const list = groups.filter((g) => g.type === type);
+  if (!list.length) return '';
+  return `
+      <h2>${title}</h2>
+      <table class="fx-table ${type}">
+        <thead><tr><th>Aigus / tardifs</th><th>Effet secondaire</th><th>En pratique</th></tr></thead>
+        <tbody>
+          ${list.map((g) => `
+            <tr class="grp"><td colspan="3">${esc(g.name)}</td></tr>
+            ${fxRows(g.acuteLabel || 'Aigus', g.acute)}
+            ${fxRows('Tardifs', g.late)}`).join('')}
+        </tbody>
+      </table>`;
+}
+
 function renderDocument() {
   const content = buildContent();
   const params = scheduleParams();
@@ -473,7 +517,13 @@ function renderDocument() {
         – sur ${sched.treatmentWeeks} semaine(s)${sched.hasDates ? `, du ${esc(formatDate(sched.start))} au ${esc(formatDate(sched.lastDay))}` : ''}.
         ${state.chemo ? `<br>Chimiothérapie ${esc(rhythmLabel())}${chemoAgentsLabel() ? ` (${esc(chemoAgentsLabel())})` : ''}, débutant le premier jour de la radiothérapie.` : ''}
       </p>
+      ${content.instructions.length ? `
+      <div class="instructions">
+        <b>Consignes pour le traitement</b>
+        ${content.instructions.map((c) => `<p>${esc(c)}</p>`).join('')}
+      </div>` : ''}
       ${scheduleHtml(sched)}
+      ${content.curie ? `<p class="curie"><b>Curiethérapie :</b> ${apptCell(apptValue('curie'))}${apptValue('curie').lieu ? ` – ${esc(apptValue('curie').lieu)}` : ''}</p>` : ''}
       ${state.pause ? `<p class="pause"><b>Pause prévue dans le traitement :</b> ${esc(state.pauseDetails || 'modalités à préciser')}</p>` : ''}
       <p class="foot-note">Schéma indicatif : les dates peuvent être modifiées (jours fériés, maintenance des appareils, tolérance du traitement).</p>
     </div></div>`;
@@ -491,17 +541,8 @@ function renderDocument() {
         </tbody>
       </table>` : '<p class="blank-box">Effets secondaires expliqués lors de la consultation.</p>'}
 
-      ${content.chemo.length ? `
-      <h2>Les effets secondaires possibles de la chimiothérapie</h2>
-      <table class="fx-table chemo">
-        <thead><tr><th>Aigus / tardifs</th><th>Effet secondaire</th><th>En pratique</th></tr></thead>
-        <tbody>
-          ${content.chemo.map((c) => `
-            <tr class="grp"><td colspan="3">${esc(c.name)}</td></tr>
-            ${fxRows('Aigus', c.acute)}
-            ${fxRows('Tardifs', c.late)}`).join('')}
-        </tbody>
-      </table>` : ''}
+      ${systemicTable('chimio', 'Les effets secondaires possibles de la chimiothérapie', content.systemic)}
+      ${systemicTable('hormono', 'Les effets secondaires possibles de l’hormonothérapie', content.systemic)}
 
       <h2>Conduite à tenir</h2>
       <div class="conduct">
@@ -590,6 +631,14 @@ document.addEventListener('click', (e) => {
     state.extraAppts.splice(Number(el.dataset.i), 1);
     renderEditor();
     renderDocument();
+  } else if (action === 'add-free') {
+    state.freeExams.push('');
+    renderOptions();
+    document.querySelector(`[data-free="${state.freeExams.length - 1}"]`).focus();
+  } else if (action === 'del-free') {
+    state.freeExams.splice(Number(el.dataset.i), 1);
+    if (!state.freeExams.length) state.freeExams.push('');
+    renderOptions();
   } else if (action === 'add-effect') {
     state.extraEffects.push({ kind: 'acute', effect: '', explain: '' });
     renderEditor();
@@ -621,6 +670,8 @@ app.addEventListener('input', (e) => {
   const t = e.target;
   if (t.dataset.bind) {
     state[t.dataset.bind] = t.value;
+  } else if (t.dataset.free !== undefined) {
+    state.freeExams[Number(t.dataset.free)] = t.value;
   } else if (t.dataset.path) {
     setPath(t.dataset.path, t.value);
     renderDocument();

@@ -8,7 +8,8 @@
  *   s.chemo        booléen (chimiothérapie concomitante)
  *   s.opts         { idOption: true/false }
  *   s.agents       { idAgent: true/false }
- * et renvoie { exams: [], acute: [], late: [], chemo: [], conduct: [] }.
+ *   s.freeExams    examens saisis librement (localisation « Autre »)
+ * et renvoie l'objet décrit au-dessus de `emptyBuild`.
  */
 
 const RT_TYPES = [
@@ -83,6 +84,51 @@ const FX = {
   rash: ['Rash acnéiforme', 'Éruption de boutons ressemblant à de l’acné, surtout sur le visage, le cou et le haut du tronc.'],
   immuno: ['Effets variables (dysthyroïdie, colite, pneumopathie interstitielle, hépatite, …)',
     'Le système immunitaire, stimulé, peut s’attaquer à certains organes : thyroïde, intestin (diarrhée), poumons (toux, essoufflement), foie… Tout symptôme inhabituel doit être signalé.'],
+  // Crâne
+  htic: ['HTIC (hypertension intracrânienne)', 'Augmentation de la pression à l’intérieur du crâne : maux de tête, nausées ou vomissements, surtout le matin.'],
+  alopecie: ['Alopécie', 'Chute des cheveux dans la zone traitée, le plus souvent temporaire.'],
+  asthenie: ['Asthénie', 'Fatigue, qui peut s’accentuer au fil des séances.'],
+  aggravationNeuro: ['Aggravation des signes neurologiques', 'Les symptômes présents avant le traitement (troubles de la parole, de la marche, de la mémoire…) peuvent s’aggraver temporairement.'],
+  asthenieTard: ['Asthénie', 'La fatigue peut persister plusieurs mois après la fin du traitement.'],
+  alopecieTard: ['Alopécie', 'Les cheveux peuvent repousser moins denses, voire ne pas repousser dans certaines zones.'],
+  lymphopenie: ['Lymphopénie', 'Baisse de certains globules blancs (lymphocytes), qui augmente le risque d’infection. Elle est surveillée par prise de sang.'],
+  // Sein
+  oedemeSein: ['Œdème du sein', 'Le sein peut gonfler, devenir plus lourd et plus sensible.'],
+  fibrose: ['Fibrose', 'Le sein peut devenir plus ferme, plus dur, et parfois diminuer de volume.'],
+  hyperpigmentation: ['Hyperpigmentation', 'La peau de la zone traitée peut rester plus foncée.'],
+  lymphoedeme: ['Lymphœdème', 'Gonflement du bras du côté traité, lié à une moins bonne circulation de la lymphe. Éviter les blessures, piqûres et prises de tension de ce côté.'],
+  hyperplasieEndometre: ['Hyperplasie endométriale', 'Épaississement de la muqueuse de l’utérus : signaler tout saignement vaginal.'],
+  thrombose: ['Risque de thrombose', 'Formation d’un caillot dans une veine (phlébite) : signaler une douleur ou un gonflement du mollet, ou un essoufflement brutal.'],
+  bouffees: ['Bouffées de chaleur', 'Sensations soudaines de chaleur, avec rougeur et transpiration.'],
+  priseDePoids: ['Prise de poids', 'Tendance à prendre du poids : une alimentation équilibrée et une activité physique régulière sont conseillées.'],
+  douleursArticulaires: ['Douleurs articulaires', 'Douleurs et raideurs des articulations, souvent plus marquées le matin.'],
+  fragiliteOsseuse: ['Fragilité osseuse', 'Les os deviennent plus fragiles (ostéoporose) : une surveillance par ostéodensitométrie peut être proposée.'],
+  // Digestif
+  denutritionSimple: ['Risque de dénutrition', 'Perte de poids liée aux difficultés pour manger.'],
+  douleursAbdo: ['Douleurs abdominales', 'Douleurs ou crampes dans le ventre.'],
+  rild: ['RILD (atteinte hépatique radio-induite)', 'Atteinte du foie liée aux rayons, pouvant survenir dans les semaines ou mois suivant le traitement (fatigue, ventre gonflé, jaunisse). Surveillance par prise de sang.'],
+  degradHepatique: ['Dégradation de la fonction hépatique', 'Diminution durable du fonctionnement du foie, surveillée par prise de sang.'],
+  diarrhee: ['Diarrhée', 'Selles plus fréquentes et plus liquides.'],
+  diarrheeTard: ['Diarrhée', 'Les selles peuvent rester plus fréquentes ou plus molles de façon durable.'],
+  bilanHepatique: ['Altération du bilan hépatique', 'Anomalies des analyses du foie sur la prise de sang, surveillées pendant le traitement.'],
+  // Pelvis
+  cystite: ['Cystite', 'Irritation de la vessie : envies fréquentes d’uriner, brûlures en urinant.'],
+  cystiteTard: ['Cystite', 'Des troubles urinaires (envies fréquentes, brûlures, parfois sang dans les urines) peuvent persister ou apparaître à distance.'],
+  dermiteSevere: ['Dermite pouvant être sévère', 'Rougeur de la peau du pli des fesses et de la région anale, comme une brûlure, pouvant être intense avec des plaies. Des soins locaux seront prescrits.'],
+  alopecieLocale: ['Alopécie locale', 'Chute des poils dans la zone traitée.'],
+  alopecieLocaleTard: ['Alopécie locale', 'Les poils de la zone traitée peuvent ne pas repousser.'],
+  secheresseVaginale: ['Sécheresse vaginale', 'Sécheresse du vagin pouvant rendre les rapports sexuels inconfortables ; des gels lubrifiants peuvent aider.'],
+  synechies: ['Synéchies vaginales', 'Les parois du vagin peuvent se coller ou se rétrécir : l’utilisation de dilatateurs vaginaux est conseillée.'],
+  anite: ['Anite', 'Inflammation de l’anus : brûlures, démangeaisons, gêne pour aller à la selle.'],
+  anitetard: ['Anite', 'Une gêne ou une irritation de l’anus peut persister.'],
+  rectite: ['Rectite', 'Inflammation du rectum : envies fréquentes ou pressantes d’aller à la selle, glaires, parfois saignements.'],
+  rectiteTard: ['Rectite', 'Des troubles du rectum (saignements, envies pressantes) peuvent apparaître à distance.'],
+  dysfonctionErectile: ['Dysfonction érectile', 'Difficultés à obtenir ou à maintenir une érection, pouvant apparaître progressivement. Des traitements existent.'],
+  risqueCV: ['Augmentation du risque cardiovasculaire', 'Le risque de maladies du cœur et des vaisseaux augmente : surveillance de la tension, du cholestérol et du poids.'],
+  muciteVaginale: ['Mucite vaginale', 'Inflammation de l’intérieur du vagin : irritation, brûlures, pertes.'],
+  menopause: ['Ménopause induite', 'Arrêt du fonctionnement des ovaires : arrêt des règles, bouffées de chaleur, sécheresse vaginale.'],
+  malabsorption: ['Malabsorption', 'L’intestin peut moins bien absorber certains aliments ou vitamines, ce qui peut entraîner diarrhée et carences.'],
+  troublesDigestifs: ['Troubles digestifs', 'Selles irrégulières, ballonnements ou envies pressantes pouvant persister.'],
 };
 
 const fx = (key) => ({ effect: FX[key][0], explain: FX[key][1] });
@@ -91,17 +137,87 @@ const CISPLATINE_FX = {
   acute: ['nausees', 'toxRenale', 'toxAuditive'],
   late: ['degradRenale', 'ototoxicite'],
 };
+const IMMUNO_FX = { acute: ['immuno'], late: [] };
+const XELODA_FX = { acute: ['diarrhee', 'bilanHepatique'], late: [] };
 
 const CONDUCT = {
   alimentation: 'En cas de difficultés à vous alimenter ou de perte de poids, prévenir le médecin.',
   cisplatine: 'Boire 2 L par jour. Prévenir en cas de nausées résistantes aux traitements.',
+  cisplatinePelvis: 'Boire 2 L par jour. Prévenir en cas de nausées ou de diarrhées résistantes aux traitements.',
   pneumopathie: 'En cas de symptômes évocateurs de pneumopathie radique (grosse toux, essoufflement, fièvre) survenant dans le mois suivant la radiothérapie, contacter le service de radiothérapie ou de pneumologie en urgence. Si besoin, contacter le 15.',
+  neuro: 'En cas de céphalées résistant au traitement ou d’aggravation des symptômes neurologiques, prévenir le médecin.',
+  urines: 'En cas de difficultés à uriner, prévenir le médecin.',
 };
 
-const emptyBuild = () => ({ exams: [], acute: [], late: [], chemo: [], conduct: [] });
+// Consignes affichées dans un encart au-dessus du schéma de traitement
+const INSTRUCTIONS = {
+  temodal: 'Le Temodal doit être pris 1 h avant chaque séance de radiothérapie, au moins 1 heure avant un repas ou au moins 2 heures après. En l’absence de séance, il doit être pris à heure fixe. Le Zophren doit être pris 30 minutes avant le Temodal.',
+  xeloda: 'Le Xeloda doit être pris uniquement les jours de séance de radiothérapie. Il doit être pris matin et soir, à 12 heures d’intervalle, dans les 30 minutes suivant un repas.',
+  preparation: 'Avant le scanner dosimétrique et chaque séance de traitement : aller à la selle et vider la vessie 30 minutes avant le traitement, puis boire 2 grands verres d’eau et ne plus uriner avant la séance.',
+  preparationStereo: 'Avant le scanner dosimétrique et chaque séance de traitement : faire un Microlax et vider la vessie 30 minutes avant le traitement, puis boire 2 grands verres d’eau et ne plus uriner avant la séance.',
+};
+
+/*
+ * Résultat de build(s) :
+ *   exams         examens avant traitement (libellés)
+ *   acute, late   clés FX des effets de la radiothérapie
+ *   systemic      [{ type: 'chimio'|'hormono', name, acute: [], late: [], acuteLabel? }]
+ *   conduct       consignes « conduite à tenir »
+ *   instructions  encart de consignes au-dessus du schéma
+ *   curie         true → ligne « curiethérapie » après le schéma
+ */
+const emptyBuild = () => ({ exams: [], acute: [], late: [], systemic: [], conduct: [], instructions: [], curie: false });
+
+const PICC = { id: 'picc', label: 'Pose de PICC' };
+const IRM = { id: 'irm', label: 'IRM' };
+const XELODA = { id: 'xeloda', label: 'Xeloda' };
+
+// Col de l'utérus et endomètre : même structure, effets aigus différents
+function gynecoLoc(id, label, acute) {
+  return {
+    id,
+    label,
+    options: [PICC, { id: 'curie', label: 'Curiethérapie' }],
+    chemoAgents: [
+      { id: 'cisHebdo', label: 'Cisplatine hebdomadaire' },
+      { id: 'immuno', label: 'Immunothérapie' },
+    ],
+    build(s) {
+      const o = s.opts;
+      const a = s.chemo ? s.agents : {};
+      const r = emptyBuild();
+      if (o.picc) r.exams.push('Pose de PICC line');
+      r.curie = !!o.curie;
+      r.acute = acute;
+      r.late = ['alopecieLocaleTard', 'synechies', 'menopause', 'malabsorption', 'troublesDigestifs'];
+      if (a.cisHebdo) r.systemic.push({ type: 'chimio', name: 'Cisplatine', ...CISPLATINE_FX });
+      if (a.immuno) r.systemic.push({ type: 'chimio', name: 'Immunothérapie', ...IMMUNO_FX });
+      r.conduct.push(CONDUCT.alimentation);
+      if (a.cisHebdo) r.conduct.push(CONDUCT.cisplatinePelvis);
+      r.instructions.push(INSTRUCTIONS.preparation);
+      return r;
+    },
+  };
+}
 
 const LOCALISATIONS = [
-  { id: 'crane', label: 'Crâne', options: [], build: emptyBuild },
+  {
+    id: 'crane',
+    label: 'Crâne',
+    options: [IRM],
+    build(s) {
+      const r = emptyBuild();
+      if (s.opts.irm) r.exams.push('IRM');
+      r.acute = ['htic', 'alopecie', 'asthenie', 'aggravationNeuro'];
+      r.late = ['asthenieTard', 'alopecieTard'];
+      if (s.chemo) {
+        r.systemic.push({ type: 'chimio', name: 'Temodal', acute: ['nausees', 'lymphopenie'], late: [] });
+        r.instructions.push(INSTRUCTIONS.temodal);
+      }
+      r.conduct.push(CONDUCT.neuro);
+      return r;
+    },
+  },
 
   {
     id: 'orl',
@@ -109,7 +225,7 @@ const LOCALISATIONS = [
     options: [
       { id: 'edente', label: 'Patient édenté' },
       { id: 'gastro', label: 'Gastrostomie prophylactique' },
-      { id: 'picc', label: 'Pose de PICC' },
+      PICC,
       { id: 'larynx', label: 'Traitement du larynx' },
       { id: 'bouche', label: 'Traitement de la cavité buccale ou de l’oropharynx' },
       { id: 'sinus', label: 'Traitement des sinus ou du nasopharynx' },
@@ -142,9 +258,9 @@ const LOCALISATIONS = [
       if (o.larynx) r.late.push('fatigueVoix');
       if (o.sinus) r.late.push('cataracte', 'secheresseNasale');
 
-      if (cis) r.chemo.push({ name: 'Cisplatine', ...CISPLATINE_FX });
-      if (a.cetuximab) r.chemo.push({ name: 'Cetuximab', acute: ['majorationDermite', 'rash'], late: [] });
-      if (a.immuno) r.chemo.push({ name: 'Immunothérapie', acute: ['immuno'], late: [] });
+      if (cis) r.systemic.push({ type: 'chimio', name: 'Cisplatine', ...CISPLATINE_FX });
+      if (a.cetuximab) r.systemic.push({ type: 'chimio', name: 'Cetuximab', acute: ['majorationDermite', 'rash'], late: [] });
+      if (a.immuno) r.systemic.push({ type: 'chimio', name: 'Immunothérapie', ...IMMUNO_FX });
 
       r.conduct.push(CONDUCT.alimentation);
       if (cis) r.conduct.push(CONDUCT.cisplatine);
@@ -155,10 +271,7 @@ const LOCALISATIONS = [
   {
     id: 'thyroide',
     label: 'Thyroïde',
-    options: [
-      { id: 'gastro', label: 'Gastrostomie prophylactique' },
-      { id: 'picc', label: 'Pose de PICC' },
-    ],
+    options: [{ id: 'gastro', label: 'Gastrostomie prophylactique' }, PICC],
     build(s) {
       const o = s.opts;
       const r = emptyBuild();
@@ -168,7 +281,7 @@ const LOCALISATIONS = [
       r.acute = ['toux', 'dysphagie', 'denutrition', 'glaires', 'dermite', 'dysphonie'];
       r.late = ['dysphagieTard', 'dysphonieTard'];
 
-      if (s.chemo) r.chemo.push({ name: 'Chimiothérapie', ...CISPLATINE_FX });
+      if (s.chemo) r.systemic.push({ type: 'chimio', name: 'Chimiothérapie', ...CISPLATINE_FX });
 
       r.conduct.push(CONDUCT.alimentation);
       if (s.chemo) r.conduct.push(CONDUCT.cisplatine);
@@ -176,7 +289,45 @@ const LOCALISATIONS = [
     },
   },
 
-  { id: 'oesophage', label: 'Œsophage', options: [], build: emptyBuild },
+  {
+    id: 'sein',
+    label: 'Sein',
+    options: [
+      { id: 'tamoxifene', label: 'Hormonothérapie par Tamoxifène' },
+      { id: 'antiAromatase', label: 'Hormonothérapie par anti-aromatase' },
+      { id: 'susClav', label: 'Traitement sus-claviculaire' },
+      { id: 'axillaire', label: 'Traitement axillaire' },
+    ],
+    build(s) {
+      const o = s.opts;
+      const r = emptyBuild();
+      r.acute = ['dermite', 'oedemeSein'];
+      if (o.susClav) r.acute.push('dysphagie');
+      r.late = ['fibrose', 'hyperpigmentation'];
+      if (o.axillaire) r.late.push('lymphoedeme');
+      const during = 'Pendant l’hormonothérapie';
+      if (o.tamoxifene) {
+        r.systemic.push({ type: 'hormono', name: 'Tamoxifène', acute: ['hyperplasieEndometre', 'thrombose'], late: [], acuteLabel: during });
+      }
+      if (o.antiAromatase) {
+        r.systemic.push({ type: 'hormono', name: 'Anti-aromatase', acute: ['bouffees', 'priseDePoids', 'douleursArticulaires', 'fragiliteOsseuse'], late: [], acuteLabel: during });
+      }
+      return r;
+    },
+  },
+
+  {
+    id: 'oesophage',
+    label: 'Œsophage',
+    options: [],
+    build() {
+      const r = emptyBuild();
+      r.acute = ['touxPoumon', 'dyspnee', 'dysphagie', 'denutritionSimple'];
+      r.late = ['dysphagieTard'];
+      r.conduct.push(CONDUCT.alimentation);
+      return r;
+    },
+  },
 
   {
     id: 'poumon',
@@ -207,13 +358,128 @@ const LOCALISATIONS = [
     },
   },
 
-  { id: 'sein', label: 'Sein', options: [], build: emptyBuild },
-  { id: 'foie', label: 'Foie', options: [], build: emptyBuild },
-  { id: 'pancreas', label: 'Pancréas', options: [], build: emptyBuild },
-  { id: 'rectum', label: 'Rectum', options: [], build: emptyBuild },
-  { id: 'canalAnal', label: 'Canal anal', options: [], build: emptyBuild },
-  { id: 'prostate', label: 'Prostate', options: [], build: emptyBuild },
-  { id: 'col', label: 'Col de l’utérus', options: [], build: emptyBuild },
-  { id: 'endometre', label: 'Endomètre', options: [], build: emptyBuild },
-  { id: 'autre', label: 'Autre', options: [], build: emptyBuild },
+  {
+    id: 'foie',
+    label: 'Foie',
+    options: [{ id: 'fiduciaires', label: 'Pose de fiduciaires' }],
+    build(s) {
+      const r = emptyBuild();
+      if (s.opts.fiduciaires) r.exams.push('Pose de fiduciaires');
+      r.acute = ['nausees', 'douleursAbdo'];
+      if (s.rtType === 'stereo') r.acute.push('rild');
+      r.late = ['degradHepatique'];
+      return r;
+    },
+  },
+
+  {
+    id: 'pancreas',
+    label: 'Pancréas',
+    options: [IRM, XELODA],
+    build(s) {
+      const r = emptyBuild();
+      if (s.opts.irm) r.exams.push('IRM');
+      r.acute = ['nausees', 'diarrhee', 'douleursAbdo'];
+      r.late = ['diarrheeTard'];
+      if (s.opts.xeloda) {
+        r.systemic.push({ type: 'chimio', name: 'Xeloda', ...XELODA_FX });
+        r.instructions.push(INSTRUCTIONS.xeloda);
+      }
+      return r;
+    },
+  },
+
+  {
+    id: 'rectum',
+    label: 'Rectum',
+    options: [IRM],
+    build(s) {
+      const r = emptyBuild();
+      if (s.opts.irm) r.exams.push('IRM');
+      r.acute = ['diarrhee', 'cystite'];
+      r.late = ['diarrheeTard'];
+      if (s.chemo) {
+        r.systemic.push({ type: 'chimio', name: 'Xeloda', ...XELODA_FX });
+        r.instructions.push(INSTRUCTIONS.xeloda);
+      }
+      return r;
+    },
+  },
+
+  {
+    id: 'canalAnal',
+    label: 'Canal anal',
+    options: [IRM, XELODA, { id: 'femme', label: 'Femme' }],
+    build(s) {
+      const o = s.opts;
+      const r = emptyBuild();
+      if (o.irm) r.exams.push('IRM');
+      r.acute = ['diarrhee', 'cystite', 'dermiteSevere'];
+      r.late = ['diarrheeTard', 'alopecieLocaleTard'];
+      if (o.femme) r.late.push('secheresseVaginale', 'synechies');
+      if (s.chemo) {
+        r.systemic.push({ type: 'chimio', name: o.xeloda ? 'Xeloda' : 'Chimiothérapie', acute: ['nausees', 'diarrhee', 'bilanHepatique'], late: [] });
+      }
+      if (o.xeloda) r.instructions.push(INSTRUCTIONS.xeloda);
+      return r;
+    },
+  },
+
+  {
+    id: 'prostate',
+    label: 'Prostate',
+    options: [
+      { id: 'hormono', label: 'Hormonothérapie' },
+      IRM,
+      { id: 'grains', label: 'Pose de grains d’or' },
+    ],
+    build(s) {
+      const o = s.opts;
+      const r = emptyBuild();
+      if (o.irm) r.exams.push('IRM');
+      if (o.grains) r.exams.push('Pose de grains d’or');
+      r.acute = ['cystite', 'anite', 'rectite', 'diarrhee', 'alopecieLocale'];
+      r.late = ['cystiteTard', 'anitetard', 'rectiteTard', 'dysfonctionErectile'];
+      if (o.hormono) {
+        r.systemic.push({ type: 'hormono', name: 'Hormonothérapie', acute: ['asthenie', 'bouffees', 'priseDePoids', 'risqueCV'], late: [] });
+      }
+      r.conduct.push(CONDUCT.urines);
+      r.instructions.push(s.rtType === 'stereo' ? INSTRUCTIONS.preparationStereo : INSTRUCTIONS.preparation);
+      return r;
+    },
+  },
+
+  gynecoLoc('col', 'Col de l’utérus',
+    ['cystite', 'muciteVaginale', 'anite', 'rectite', 'diarrhee', 'alopecieLocale', 'dermite']),
+  gynecoLoc('endometre', 'Endomètre',
+    ['cystite', 'muciteVaginale', 'diarrhee', 'alopecieLocale', 'dermite']),
+
+  {
+    id: 'autre',
+    label: 'Autre',
+    optionsLabel: 'Localisation anatomique traitée (choix multiples possibles)',
+    options: [
+      { id: 'zCrane', label: 'Crâne', base: 'crane' },
+      { id: 'zOrl', label: 'ORL', base: 'orl' },
+      { id: 'zThorax', label: 'Thorax', base: 'poumon' },
+      { id: 'zAbdomen', label: 'Abdomen', base: 'pancreas' },
+      { id: 'zPelvis', label: 'Pelvis', base: 'rectum' },
+    ],
+    freeExams: true,
+    // Effets de la radiothérapie repris des localisations de référence de chaque zone,
+    // sans chimiothérapie ni hormonothérapie.
+    build(s) {
+      const r = emptyBuild();
+      r.exams = (s.freeExams || []).map((e) => e.trim()).filter(Boolean);
+      this.options.filter((z) => s.opts[z.id]).forEach((z) => {
+        const ref = LOCALISATIONS.find((l) => l.id === z.base)
+          .build({ rtType: s.rtType, chemo: false, opts: {}, agents: {} });
+        // Dédoublonnage sur le libellé (ex. « Toux » existe en version ORL et poumon)
+        const add = (list, k) => { if (!list.some((x) => FX[x][0] === FX[k][0])) list.push(k); };
+        ref.acute.forEach((k) => add(r.acute, k));
+        ref.late.forEach((k) => add(r.late, k));
+      });
+      return r;
+    },
+  },
 ];

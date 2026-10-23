@@ -12,6 +12,8 @@
   --ct-soft: #fbe9d6;
   --ps: #b0306a;
   --ps-soft: #f6dde8;
+  --hm: #2e7d6b;
+  --hm-soft: #dcefe9;
   --danger: #b42318;
   --radius: 10px;
 }
@@ -187,6 +189,9 @@ textarea { resize: vertical; }
 .editor .appt { border: 1px solid var(--line); border-radius: 8px; padding: 10px; margin-bottom: 8px; }
 .editor .appt-head { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
 .editor .appt-head input { padding: 6px 8px; }
+.editor .curie-appt { margin-top: 8px; }
+.free-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+.free-row { display: flex; gap: 6px; align-items: center; }
 .icon-btn { border: 0; background: none; cursor: pointer; color: var(--muted); padding: 4px 6px; }
 .icon-btn:hover { color: var(--danger); }
 
@@ -300,6 +305,19 @@ textarea { resize: vertical; }
 .fx-table td.fx { width: 30%; font-weight: 600; }
 .fx-table.chemo th.kind { background: var(--ct-soft); }
 .fx-table tr.grp td { background: var(--ct); color: #fff; font-weight: 700; }
+.fx-table.hormono th.kind { background: var(--hm-soft); }
+.fx-table.hormono tr.grp td { background: var(--hm); }
+
+.instructions {
+  margin: .2em 0 .6em;
+  padding: .45em .7em;
+  border: 1.5px solid var(--accent);
+  border-left-width: 5px;
+  border-radius: 6px;
+  background: #f5f8fc;
+}
+.instructions p { margin: .2em 0 0; }
+.curie { margin: .5em 0 0; padding: .4em .6em; background: var(--rt-soft); border-left: 3px solid var(--rt); }
 .blank-box { padding: .6em; border: 1px dashed var(--line); color: var(--muted); }
 
 .conduct {
