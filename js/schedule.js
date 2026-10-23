@@ -47,6 +47,7 @@ function formatShort(date) {
  * @param {string} [p.startDate]       AAAA-MM-JJ ; sinon calendrier relatif
  * @param {boolean} p.chemo
  * @param {number|null} p.chemoInterval jours entre deux cures (1 = quotidienne, null = J1 seulement)
+ * @param {boolean} [p.dailyChemoEveryDay] chimiothérapie quotidienne aussi les jours sans séance (week-ends inclus)
  */
 function computeSchedule(p) {
   const hasDates = !!parseISODate(p.startDate);
@@ -73,7 +74,7 @@ function computeSchedule(p) {
   const chemoDays = [];
   const bloodDays = [];
   if (p.chemo) {
-    if (p.chemoInterval === 1) {
+    if (p.chemoInterval === 1 && !p.dailyChemoEveryDay) {
       treatment.forEach((t) => chemoDays.push(t.date));
     } else if (p.chemoInterval) {
       for (let c = new Date(start); c <= lastDay; c = addDays(c, p.chemoInterval)) chemoDays.push(c);

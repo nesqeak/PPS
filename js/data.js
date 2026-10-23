@@ -204,6 +204,8 @@ const LOCALISATIONS = [
   {
     id: 'crane',
     label: 'Crâne',
+    // Temodal quotidien : 7 jours sur 7 entre la 1re et la dernière séance
+    dailyChemoEveryDay: true,
     options: [IRM],
     build(s) {
       const r = emptyBuild();

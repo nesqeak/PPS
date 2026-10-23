@@ -300,6 +300,7 @@ function scheduleParams() {
     startDate: apptValue('start').date,
     chemo: !!state.chemo,
     chemoInterval: r ? r.interval : null,
+    dailyChemoEveryDay: !!getLoc().dailyChemoEveryDay,
   };
 }
 
