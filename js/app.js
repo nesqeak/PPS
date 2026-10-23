@@ -95,6 +95,10 @@ function render() {
 function renderHome() {
   app.innerHTML = `
     <section class="panel narrow">
+      <div class="home-brand">
+        <img src="${LOGO_SRC}" alt="HCL – Hôpital Lyon Sud">
+        <span>Service de Radiothérapie</span>
+      </div>
       <h1>Nouveau PPS de radiothérapie</h1>
       <p class="lead">Choisissez la localisation tumorale.</p>
       <div class="loc-grid">

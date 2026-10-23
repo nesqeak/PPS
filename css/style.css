@@ -79,6 +79,19 @@ h1 { font-size: 24px; margin: 0 0 6px; }
 .muted { color: var(--muted); font-weight: 400; }
 .small { font-size: 13px; }
 
+.home-brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-bottom: 18px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid var(--hcl);
+}
+.home-brand img { height: 72px; width: auto; display: block; }
+.home-brand span { font-size: 22px; font-weight: 700; color: var(--hcl); }
+
 .loc-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
