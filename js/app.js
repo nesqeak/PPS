@@ -233,7 +233,9 @@ function buildContent() {
   const loc = getLoc();
   const r = loc.build({ rtType: state.rtType, chemo: state.chemo, opts: state.opts, agents: state.agents });
   const exams = [...r.exams];
-  if (state.dai) exams.push('Avis cardiologique / contrôle du DAI');
+  if (state.dai) {
+    exams.push('Contrôle du DAI avant radiothérapie', 'Contrôle du DAI après la première séance', 'Contrôle du DAI en fin de traitement');
+  }
   return { ...r, exams };
 }
 
