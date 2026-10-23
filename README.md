@@ -28,7 +28,7 @@ Aucune donnée n’est enregistrée ni envoyée : tout reste dans la page du nav
 
 ### Compléter une localisation
 
-Les localisations Crâne, Œsophage, Sein, Foie, Pancréas, Rectum, Prostate, Col de l’utérus,
+Les localisations Crâne, Œsophage, Sein, Foie, Pancréas, Rectum, Canal anal, Prostate, Col de l’utérus,
 Endomètre et Autre n’ont pas encore de contenu spécifique. Pour en ajouter, renseigner dans
 `js/data.js` la liste `options` et la fonction `build(s)` de la localisation (voir ORL, Thyroïde
 ou Poumon comme modèles). En attendant, des effets secondaires et consignes peuvent être ajoutés

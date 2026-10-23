@@ -211,6 +211,7 @@ const LOCALISATIONS = [
   { id: 'foie', label: 'Foie', options: [], build: emptyBuild },
   { id: 'pancreas', label: 'Pancréas', options: [], build: emptyBuild },
   { id: 'rectum', label: 'Rectum', options: [], build: emptyBuild },
+  { id: 'canalAnal', label: 'Canal anal', options: [], build: emptyBuild },
   { id: 'prostate', label: 'Prostate', options: [], build: emptyBuild },
   { id: 'col', label: 'Col de l’utérus', options: [], build: emptyBuild },
   { id: 'endometre', label: 'Endomètre', options: [], build: emptyBuild },
