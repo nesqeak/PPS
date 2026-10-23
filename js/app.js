@@ -1,6 +1,8 @@
 /* Éditeur de PPS – radiothérapie : navigation, formulaires et rendu du document. */
 
 const app = document.getElementById('app');
+// Logo intégré (js/logo.js) ; repli sur le fichier image si le script n'a pas été chargé.
+const LOGO = typeof LOGO_SRC !== 'undefined' ? LOGO_SRC : 'img/logo-hcl.jpg';
 const breadcrumb = document.getElementById('breadcrumb');
 
 function newState() {
@@ -96,7 +98,7 @@ function renderHome() {
   app.innerHTML = `
     <section class="panel narrow">
       <div class="home-brand">
-        <img src="${LOGO_SRC}" alt="HCL – Hôpital Lyon Sud">
+        <img src="${LOGO}" alt="HCL – Hôpital Lyon Sud">
         <span>Service de Radiothérapie</span>
       </div>
       <h1>Nouveau PPS de radiothérapie</h1>
@@ -475,7 +477,7 @@ function renderDocument() {
 
   const header = (pageNo) => `
     <div class="doc-banner">
-      <img src="${LOGO_SRC}" alt="HCL – Hôpital Lyon Sud">
+      <img src="${LOGO}" alt="HCL – Hôpital Lyon Sud">
       <span>Service de Radiothérapie</span>
     </div>
     <header class="doc-head">
