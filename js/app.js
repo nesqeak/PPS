@@ -101,7 +101,7 @@ function renderHome() {
         <img src="${LOGO}" alt="HCL – Hôpital Lyon Sud">
         <span>Service de Radiothérapie</span>
       </div>
-      <h1>Nouveau PPS de radiothérapie</h1>
+      <h1>Éditeur de PPS de radiothérapie</h1>
       <p class="lead">Choisissez la localisation tumorale.</p>
       <div class="loc-grid">
         ${LOCALISATIONS.map((l) => `
