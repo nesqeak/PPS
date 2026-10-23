@@ -470,6 +470,10 @@ function renderDocument() {
     : `${params.daysPerWeek} jour(s) par semaine`;
 
   const header = (pageNo) => `
+    <div class="doc-banner">
+      <img src="${LOGO_SRC}" alt="HCL – Hôpital Lyon Sud">
+      <span>Service de Radiothérapie</span>
+    </div>
     <header class="doc-head">
       <div>
         <div class="doc-title">Programme Personnalisé de Soins – Radiothérapie</div>
