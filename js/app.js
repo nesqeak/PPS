@@ -470,7 +470,7 @@ function renderDocument() {
       <h2>Mon plan de traitement</h2>
       <p class="plan-sum">
         <b>${params.totalSessions} séance(s)</b> de radiothérapie, ${esc(nDaysLabel)}
-        – soit ${sched.treatmentDays} jour(s) de traitement${sched.hasDates ? `, du ${esc(formatDate(sched.start))} au ${esc(formatDate(sched.lastDay))}` : ''}.
+        – sur ${sched.treatmentWeeks} semaine(s)${sched.hasDates ? `, du ${esc(formatDate(sched.start))} au ${esc(formatDate(sched.lastDay))}` : ''}.
         ${state.chemo ? `<br>Chimiothérapie ${esc(rhythmLabel())}${chemoAgentsLabel() ? ` (${esc(chemoAgentsLabel())})` : ''}, débutant le premier jour de la radiothérapie.` : ''}
       </p>
       ${scheduleHtml(sched)}

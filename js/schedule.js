@@ -108,7 +108,7 @@ function computeSchedule(p) {
     hasDates,
     start,
     lastDay,
-    treatmentDays: treatment.length,
+    treatmentWeeks: weeks.filter((w) => w.count > 0).length,
     weeks,
     firstBlood: bloodDays[0] || null,
   };
