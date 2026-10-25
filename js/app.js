@@ -154,7 +154,7 @@ function renderForm() {
       </fieldset>
 
       <fieldset class="field">
-        <legend class="label">Pause dans le traitement</legend>
+        <legend class="label">Pause dans le traitement systémique</legend>
         ${radioGroup('pause', YES_NO, yn(state.pause))}
         ${state.pause ? `
           <div class="sub">
