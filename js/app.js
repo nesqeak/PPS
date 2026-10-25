@@ -184,7 +184,7 @@ function validateForm() {
   if (state.chemo === null) errs.push('Indiquer s’il y a une chimiothérapie concomitante.');
   if (state.chemo && !state.chemoRhythm) errs.push('Choisir le rythme de la chimiothérapie.');
   if (state.chemo && state.chemoRhythm === 'autre' && !state.chemoRhythmOther.trim()) errs.push('Préciser le rythme de la chimiothérapie.');
-  if (state.pause === null) errs.push('Indiquer s’il y a une pause dans le traitement.');
+  if (state.pause === null) errs.push('Indiquer s’il y a une pause dans le traitement systémique.');
   if (state.dai === null) errs.push('Indiquer si le patient est porteur d’un DAI.');
   return errs;
 }
@@ -535,7 +535,7 @@ function renderDocument() {
       </div>` : ''}
       ${scheduleHtml(sched)}
       ${content.curie ? `<p class="curie"><b>Curiethérapie :</b> ${apptCell(apptValue('curie'))}${apptValue('curie').lieu ? ` – ${esc(apptValue('curie').lieu)}` : ''}</p>` : ''}
-      ${state.pause ? `<p class="pause"><b>Pause prévue dans le traitement :</b> ${esc(state.pauseDetails || 'modalités à préciser')}</p>` : ''}
+      ${state.pause ? `<p class="pause"><b>Pause prévue dans le traitement systémique :</b> ${esc(state.pauseDetails || 'modalités à préciser')}</p>` : ''}
       <p class="foot-note">Schéma indicatif : les dates peuvent être modifiées (jours fériés, maintenance des appareils, tolérance du traitement).</p>
     </div></div>`;
 
