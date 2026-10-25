@@ -131,6 +131,9 @@ fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 .check { border-radius: 8px; }
 .choice input, .check input { accent-color: var(--accent); margin: 0; }
 .choice.checked, .check.checked { border-color: var(--accent); background: var(--accent-soft); }
+.split-check { margin-top: 10px; display: inline-flex; }
+.split-fields { display: flex; flex-wrap: wrap; gap: 12px 20px; }
+.split-fields label { display: flex; flex-direction: column; }
 .check em { color: var(--muted); font-size: 13px; }
 
 .sub {
@@ -299,6 +302,7 @@ textarea { resize: vertical; }
 .sched td { height: 3.2em; }
 .sched td.we { background: #f3f4f6; }
 .sched td.cnt { font-weight: 700; }
+.sched td.pz { background: repeating-linear-gradient(135deg, #f1f3f6 0 6px, #e4e8ee 6px 12px); }
 .sched .dt { display: block; font-size: .78em; color: var(--muted); }
 .mk {
   display: block;
@@ -313,6 +317,7 @@ textarea { resize: vertical; }
 .mk small { display: block; font-weight: 500; font-size: .8em; opacity: .9; }
 .mk.rt { background: var(--rt); }
 .mk.ct { background: var(--ct); }
+.mk.pz { background: #fff; color: var(--muted); border: 1px dashed #9aa5b4; font-weight: 600; font-size: .78em; }
 .mk.ps { background: var(--ps-soft); color: var(--ps); border: 1px solid var(--ps); font-size: .78em; }
 
 .legend { display: flex; flex-wrap: wrap; gap: .4em 1.2em; margin-top: .45em; font-size: .85em; }
@@ -320,6 +325,7 @@ textarea { resize: vertical; }
 .sw { display: inline-block; width: 1em; height: 1em; border-radius: 3px; }
 .sw.rt { background: var(--rt); }
 .sw.ct { background: var(--ct); }
+.sw.pz { background: repeating-linear-gradient(135deg, #f1f3f6 0 3px, #c9d0da 3px 6px); border: 1px solid #9aa5b4; }
 .sw.ps { background: var(--ps-soft); border: 1px solid var(--ps); }
 
 .pause { margin: .6em 0 0; padding: .45em .6em; background: #fff8e6; border-left: 3px solid #e0b43c; }

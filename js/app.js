@@ -13,6 +13,10 @@ function newState() {
     rtType: '',
     daysPerWeek: 5,
     totalSessions: '',
+    split: false, // split course
+    split1: '',
+    splitPause: '',
+    split2: '',
     chemo: null,
     chemoRhythm: '',
     chemoRhythmOther: '',
@@ -47,6 +51,7 @@ const getLoc = () => LOCALISATIONS.find((l) => l.id === state.loc);
 const locLabel = () => (state.loc === 'autre' && state.locOther.trim() ? state.locOther.trim() : getLoc().label);
 const rtTypeLabel = () => (RT_TYPES.find((t) => t.id === state.rtType) || {}).label || '';
 const rhythm = () => CHEMO_RHYTHMS.find((r) => r.id === state.chemoRhythm);
+const totalSessions = () => (state.split ? Number(state.split1) + Number(state.split2) : Number(state.totalSessions));
 
 function rhythmLabel() {
   const r = rhythm();
@@ -129,6 +134,10 @@ function renderForm() {
       <fieldset class="field">
         <legend class="label">Type de radiothérapie</legend>
         ${radioGroup('rtType', types, state.rtType)}
+        <label class="check split-check ${state.split ? 'checked' : ''}">
+          <input type="checkbox" data-toggle="split" ${state.split ? 'checked' : ''}>
+          <span>Split course</span>
+        </label>
       </fieldset>
 
       <fieldset class="field">
@@ -136,10 +145,19 @@ function renderForm() {
         ${radioGroup('daysPerWeek', [1, 2, 3, 4, 5].map((n) => ({ id: n, label: String(n) })), state.daysPerWeek)}
       </fieldset>
 
+      ${state.split ? `
+      <div class="field split-fields">
+        <label><span class="label">Nombre de séances temps 1</span>
+          <input data-bind="split1" type="number" min="1" max="100" inputmode="numeric" value="${esc(state.split1)}" class="short"></label>
+        <label><span class="label">Durée de pause (jours)</span>
+          <input data-bind="splitPause" type="number" min="1" max="365" inputmode="numeric" value="${esc(state.splitPause)}" class="short"></label>
+        <label><span class="label">Nombre de séances temps 2</span>
+          <input data-bind="split2" type="number" min="1" max="100" inputmode="numeric" value="${esc(state.split2)}" class="short"></label>
+      </div>` : `
       <div class="field">
         <label class="label" for="totalSessions">Nombre total de séances</label>
         <input id="totalSessions" data-bind="totalSessions" type="number" min="1" max="100" inputmode="numeric" value="${esc(state.totalSessions)}" class="short">
-      </div>
+      </div>`}
 
       <fieldset class="field">
         <legend class="label">Chimiothérapie concomitante</legend>
@@ -179,8 +197,14 @@ function validateForm() {
   const errs = [];
   if (state.loc === 'autre' && !state.locOther.trim()) errs.push('Préciser la localisation.');
   if (!state.rtType) errs.push('Choisir le type de radiothérapie.');
-  const n = Number(state.totalSessions);
-  if (!Number.isInteger(n) || n < 1 || n > 100) errs.push('Saisir un nombre total de séances (entier entre 1 et 100).');
+  const isInt = (v, max) => Number.isInteger(Number(v)) && String(v).trim() !== '' && Number(v) >= 1 && Number(v) <= max;
+  if (state.split) {
+    if (!isInt(state.split1, 100)) errs.push('Saisir le nombre de séances du temps 1 (entier entre 1 et 100).');
+    if (!isInt(state.splitPause, 365)) errs.push('Saisir la durée de la pause en jours (entier entre 1 et 365).');
+    if (!isInt(state.split2, 100)) errs.push('Saisir le nombre de séances du temps 2 (entier entre 1 et 100).');
+  } else if (!isInt(state.totalSessions, 100)) {
+    errs.push('Saisir un nombre total de séances (entier entre 1 et 100).');
+  }
   if (state.chemo === null) errs.push('Indiquer s’il y a une chimiothérapie concomitante.');
   if (state.chemo && !state.chemoRhythm) errs.push('Choisir le rythme de la chimiothérapie.');
   if (state.chemo && state.chemoRhythm === 'autre' && !state.chemoRhythmOther.trim()) errs.push('Préciser le rythme de la chimiothérapie.');
@@ -205,7 +229,7 @@ function renderOptions() {
   app.innerHTML = `
     <form class="panel narrow" id="form-options" novalidate>
       <h1>${esc(locLabel())} <span class="muted">– options</span></h1>
-      <p class="lead">${esc(rtTypeLabel())} · ${esc(state.totalSessions)} séance(s) · ${state.daysPerWeek} j/semaine${state.chemo ? ` · chimiothérapie ${esc(rhythmLabel())}` : ''}</p>
+      <p class="lead">${esc(rtTypeLabel())}${state.split ? ' · split course' : ''} · ${totalSessions()} séance(s) · ${state.daysPerWeek} j/semaine${state.chemo ? ` · chimiothérapie ${esc(rhythmLabel())}` : ''}</p>
 
       ${loc.options.length ? `
         <fieldset class="field">
@@ -269,6 +293,14 @@ function apptRows(content, sched) {
   content.exams.forEach((e) => rows.push({ id: `exam-${e.replace(/\./g, '')}`, name: e }));
   state.extraAppts.forEach((a, i) => rows.push({ id: `extra-${i}`, name: a.name, extra: i }));
   rows.push({ id: 'start', name: 'Première séance de radiothérapie', placeholder: 'Service de radiothérapie', fixedDate: 'startDate' });
+  if (sched.split) {
+    rows.push({
+      id: 'resume',
+      name: `Reprise de la radiothérapie (temps 2, après ${state.splitPause} jours de pause)`,
+      derived: sched.hasDates ? formatDate(sched.resumeDate, true) : `${state.splitPause} jours après la séance n°${state.split1}`,
+      placeholder: 'Service de radiothérapie',
+    });
+  }
   if (state.chemo) {
     const agents = chemoAgentsLabel();
     rows.push({
@@ -294,7 +326,9 @@ function apptValue(id) {
 function scheduleParams() {
   const r = rhythm();
   return {
-    totalSessions: Number(state.totalSessions),
+    totalSessions: totalSessions(),
+    splitAfter: state.split ? Number(state.split1) : 0,
+    splitPause: state.split ? Number(state.splitPause) : 0,
     daysPerWeek: Number(state.daysPerWeek),
     bifract: state.rtType === 'bifract',
     startDate: apptValue('start').date,
@@ -416,7 +450,8 @@ function scheduleHtml(sched) {
     }
     if (d.chemo) marks.push('<span class="mk ct">Chimio</span>');
     if (d.blood) marks.push('<span class="mk ps">Prise de sang</span>');
-    return `<td class="${d.weekend ? 'we' : ''}">
+    if (d.pause && !d.rt) marks.push('<span class="mk pz">Pause</span>');
+    return `<td class="${d.pause ? 'pz' : d.weekend ? 'we' : ''}">
       ${sched.hasDates ? `<span class="dt">${formatShort(d.date)}</span>` : ''}
       ${marks.join('')}
     </td>`;
@@ -426,12 +461,13 @@ function scheduleHtml(sched) {
     <table class="sched">
       <thead><tr><th></th>${[1, 2, 3, 4, 5, 6, 0].map((i) => `<th>${WEEKDAYS_SHORT[i]}</th>`).join('')}<th>Séances</th></tr></thead>
       <tbody>
-        ${sched.weeks.map((w) => `<tr><th>${w.label}</th>${cells(w)}<td class="cnt">${w.count || '–'}</td></tr>`).join('')}
+        ${sched.weeks.map((w) => `<tr><th>${w.pause ? 'Pause' : w.label}</th>${cells(w)}<td class="cnt">${w.count || '–'}</td></tr>`).join('')}
       </tbody>
     </table>
     <div class="legend">
       <span><i class="sw rt"></i>Radiothérapie${bifract ? ' (RT ×2 = 2 séances dans la journée)' : ''}</span>
       ${state.chemo ? '<span><i class="sw ct"></i>Chimiothérapie</span><span><i class="sw ps"></i>Prise de sang (48 h avant la chimiothérapie)</span>' : ''}
+      ${sched.split ? '<span><i class="sw pz"></i>Pause entre les 2 temps (split course)</span>' : ''}
     </div>`;
 }
 
@@ -499,7 +535,7 @@ function renderDocument() {
       <div class="summary">
         <div><span>Localisation</span><b>${esc(locLabel())}</b></div>
         <div><span>Technique</span><b>${esc(rtTypeLabel())}</b></div>
-        <div><span>Nombre de séances</span><b>${params.totalSessions}</b></div>
+        <div><span>Nombre de séances</span><b>${params.totalSessions}${state.split ? ` <small>(split course : ${esc(state.split1)} + ${esc(state.split2)})</small>` : ''}</b></div>
         <div><span>Rythme</span><b>${esc(nDaysLabel)}</b></div>
         <div><span>Chimiothérapie</span><b>${state.chemo ? `Oui – ${esc(rhythmLabel())}` : 'Non'}</b></div>
         <div><span>DAI</span><b>${state.dai ? 'Oui' : 'Non'}</b></div>
@@ -526,6 +562,7 @@ function renderDocument() {
       <p class="plan-sum">
         <b>${params.totalSessions} séance(s)</b> de radiothérapie, ${esc(nDaysLabel)}
         – sur ${sched.treatmentWeeks} semaine(s)${sched.hasDates ? `, du ${esc(formatDate(sched.start))} au ${esc(formatDate(sched.lastDay))}` : ''}.
+        ${sched.split ? `<br>Split course : temps 1 de ${esc(state.split1)} séance(s), pause de ${esc(state.splitPause)} jours${sched.hasDates ? ` (reprise le ${esc(formatDate(sched.resumeDate, true))})` : ''}, puis temps 2 de ${esc(state.split2)} séance(s).` : ''}
         ${state.chemo ? `<br>Chimiothérapie ${esc(rhythmLabel())}${chemoAgentsLabel() ? ` (${esc(chemoAgentsLabel())})` : ''}, débutant le premier jour de la radiothérapie.` : ''}
       </p>
       ${content.instructions.length ? `
@@ -667,6 +704,9 @@ app.addEventListener('change', (e) => {
     if (['chemo', 'pause', 'dai'].includes(t.name)) state[t.name] = v === 'oui';
     else if (t.name === 'daysPerWeek') state.daysPerWeek = Number(v);
     else state[t.name] = v;
+    renderForm();
+  } else if (t.type === 'checkbox' && t.dataset.toggle) {
+    state[t.dataset.toggle] = t.checked;
     renderForm();
   } else if (t.type === 'checkbox' && t.dataset.group) {
     state[t.dataset.group][t.value] = t.checked;

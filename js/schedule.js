@@ -48,6 +48,8 @@ function formatShort(date) {
  * @param {boolean} p.chemo
  * @param {number|null} p.chemoInterval jours entre deux cures (1 = quotidienne, null = J1 seulement)
  * @param {boolean} [p.dailyChemoEveryDay] chimiothérapie quotidienne aussi les jours sans séance (week-ends inclus)
+ * @param {number} [p.splitAfter]      split course : nombre de séances du temps 1 (0 = pas de split)
+ * @param {number} [p.splitPause]      split course : durée de la pause en jours après la dernière séance du temps 1
  */
 function computeSchedule(p) {
   const hasDates = !!parseISODate(p.startDate);
@@ -60,16 +62,33 @@ function computeSchedule(p) {
   let remaining = p.totalSessions;
   let sessionNo = 1;
   let d = new Date(start);
+  const split = p.splitAfter > 0 && p.splitAfter < p.totalSessions;
+  let pauseStart = null;
+  let pauseEnd = null;
+  let resumeDate = null;
   for (let guard = 0; remaining > 0 && guard < 3650; guard++) {
     if (treatment.length === 0 || pattern.includes(d.getDay())) {
-      const n = Math.min(perDay, remaining);
+      // Le temps 1 s'arrête exactement après splitAfter séances (utile en bi-fractionné)
+      const beforeSplit = split && !resumeDate ? p.splitAfter - (sessionNo - 1) : Infinity;
+      const n = Math.min(perDay, remaining, beforeSplit);
       treatment.push({ date: new Date(d), sessions: n, first: sessionNo, last: sessionNo + n - 1 });
       sessionNo += n;
       remaining -= n;
+      if (split && !resumeDate && sessionNo - 1 === p.splitAfter) {
+        // Reprise au premier jour de traitement suivant la pause
+        pauseStart = addDays(d, 1);
+        let r = addDays(d, (p.splitPause || 0) + 1);
+        while (!pattern.includes(r.getDay())) r = addDays(r, 1);
+        resumeDate = r;
+        pauseEnd = addDays(r, -1);
+        d = r;
+        continue;
+      }
     }
     d = addDays(d, 1);
   }
   const lastDay = treatment.length ? treatment[treatment.length - 1].date : start;
+  const inPause = (date) => !!pauseStart && date >= pauseStart && date <= pauseEnd;
 
   const chemoDays = [];
   const bloodDays = [];
@@ -83,12 +102,15 @@ function computeSchedule(p) {
     }
     for (let b = addDays(start, -2); b <= lastDay; b = addDays(b, 7)) bloodDays.push(b);
   }
+  // Pas de chimiothérapie concomitante ni de bilan associé pendant la pause du split course
+  const keptChemo = chemoDays.filter((c) => !inPause(c));
+  const keptBlood = bloodDays.filter((b) => !inPause(addDays(b, 2)));
 
   const rtMap = new Map(treatment.map((t) => [dayKey(t.date), t]));
-  const chemoSet = new Set(chemoDays.map(dayKey));
-  const bloodSet = new Set(bloodDays.map(dayKey));
+  const chemoSet = new Set(keptChemo.map(dayKey));
+  const bloodSet = new Set(keptBlood.map(dayKey));
 
-  const firstDay = bloodDays.length ? bloodDays[0] : start;
+  const firstDay = keptBlood.length ? keptBlood[0] : start;
   const startWeek = mondayOf(start);
   const weeks = [];
   for (let w = mondayOf(firstDay); w <= lastDay; w = addDays(w, 7)) {
@@ -100,9 +122,10 @@ function computeSchedule(p) {
       const k = dayKey(day);
       const rt = rtMap.get(k) || null;
       if (rt) count += rt.sessions;
-      days.push({ date: day, rt, chemo: chemoSet.has(k), blood: bloodSet.has(k), weekend: i >= 5 });
+      days.push({ date: day, rt, chemo: chemoSet.has(k), blood: bloodSet.has(k), weekend: i >= 5, pause: inPause(day) });
     }
-    weeks.push({ label: idx < 0 ? 'Avant' : `Semaine ${idx + 1}`, days, count });
+    const allPause = !count && days.some((x) => x.pause);
+    weeks.push({ label: idx < 0 ? 'Avant' : `Semaine ${idx + 1}`, days, count, pause: allPause });
   }
 
   return {
@@ -111,6 +134,11 @@ function computeSchedule(p) {
     lastDay,
     treatmentWeeks: weeks.filter((w) => w.count > 0).length,
     weeks,
-    firstBlood: bloodDays[0] || null,
+    firstBlood: keptBlood[0] || null,
+    split,
+    pauseStart,
+    pauseEnd,
+    resumeDate,
+    pauseDays: pauseStart ? Math.round((resumeDate - pauseStart) / DAY_MS) : 0,
   };
 }

@@ -43,6 +43,9 @@ ORL → ORL, Thorax → Poumon, Abdomen → Pancréas, Pelvis → Rectum.
 - Jours traités selon le nombre de jours par semaine : 1 = lun ; 2 = lun, jeu ; 3 = lun, mer, ven ;
   4 = lun, mar, jeu, ven ; 5 = lun → ven. La 1re séance est toujours le jour choisi.
 - Bi-fractionné : 2 séances par jour.
+- Split course : le temps 1 s’arrête après le nombre de séances indiqué ; la reprise a lieu au premier
+  jour de traitement suivant la pause (en jours calendaires après la dernière séance du temps 1).
+  Pas de chimiothérapie concomitante ni de prise de sang associée pendant la pause.
 - Chimiothérapie : débute le jour de la 1re séance, puis selon le rythme (quotidienne = chaque jour
   de radiothérapie ; hebdomadaire / Q2W / Q3W / Q4W = tous les 7 / 14 / 21 / 28 jours), jusqu’à la
   dernière séance. Prise de sang hebdomadaire, 48 h avant chaque échéance hebdomadaire.
