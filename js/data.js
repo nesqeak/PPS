@@ -142,8 +142,7 @@ const CISPLATINE_FX = {
   late: ['degradRenale', 'ototoxicite'],
 };
 const IMMUNO_FX = { acute: ['immuno'], late: [] };
-const XELODA_FX = { acute: ['diarrhee', 'bilanHepatique'], late: [] };
-const XELODA_PELVIS_FX = { acute: ['nausees', 'diarrhee', 'bilanHepatique', 'muciteXeloda', 'mainPied'], late: [] };
+const XELODA_FX = { acute: ['nausees', 'diarrhee', 'bilanHepatique', 'muciteXeloda', 'mainPied'], late: [] };
 
 const CONDUCT = {
   alimentation: 'En cas de difficultés à vous alimenter ou de perte de poids, prévenir le médecin.',
@@ -415,7 +414,7 @@ const LOCALISATIONS = [
       r.acute = ['diarrhee', 'cystite', 'rectite', 'fauxBesoins'];
       r.late = ['diarrheeTard'];
       if (s.chemo) {
-        r.systemic.push({ type: 'chimio', name: 'Xeloda', ...XELODA_PELVIS_FX });
+        r.systemic.push({ type: 'chimio', name: 'Xeloda', ...XELODA_FX });
         r.instructions.push(INSTRUCTIONS.xeloda);
       }
       return r;
@@ -434,7 +433,7 @@ const LOCALISATIONS = [
       r.late = ['diarrheeTard', 'alopecieLocaleTard'];
       if (o.femme) r.late.push('secheresseVaginale', 'synechies');
       if (o.xeloda) {
-        r.systemic.push({ type: 'chimio', name: 'Xeloda', ...XELODA_PELVIS_FX });
+        r.systemic.push({ type: 'chimio', name: 'Xeloda', ...XELODA_FX });
       } else if (s.chemo) {
         r.systemic.push({ type: 'chimio', name: 'Chimiothérapie', acute: ['nausees', 'diarrhee', 'bilanHepatique'], late: [] });
       }
