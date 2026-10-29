@@ -60,9 +60,20 @@ function rhythmLabel() {
   return r.long || r.label.toLowerCase();
 }
 
+// Le menu des molécules ne s'applique que s'il y a une chimiothérapie (et, pour certaines
+// localisations, seulement pour un rythme donné : ex. poumon en Q3W).
+function agentsMenuActive() {
+  const loc = getLoc();
+  return !!(state.chemo && loc.chemoAgents && (!loc.chemoAgentsWhen || loc.chemoAgentsWhen(state)));
+}
+
+function selectedAgents() {
+  return agentsMenuActive() ? getLoc().chemoAgents.filter((a) => state.agents[a.id]) : [];
+}
+
 function chemoAgentsLabel() {
   const loc = getLoc();
-  if (loc.chemoAgents) return loc.chemoAgents.filter((a) => state.agents[a.id]).map((a) => a.label).join(', ');
+  if (agentsMenuActive() || (loc.chemoAgents && !loc.chemoAgentsWhen)) return selectedAgents().map((a) => a.label).join(', ');
   // Molécule implicite de la localisation (ex. Temodal pour le crâne)
   return buildContent().systemic
     .filter((g) => g.type === 'chimio' && g.name !== 'Chimiothérapie')
@@ -225,7 +236,7 @@ function checkboxList(group, items, values) {
 
 function renderOptions() {
   const loc = getLoc();
-  const showAgents = state.chemo && loc.chemoAgents;
+  const showAgents = agentsMenuActive();
   app.innerHTML = `
     <form class="panel narrow" id="form-options" novalidate>
       <h1>${esc(locLabel())} <span class="muted">– options</span></h1>
@@ -254,7 +265,7 @@ function renderOptions() {
 
       ${showAgents ? `
         <fieldset class="field">
-          <legend class="label">Chimiothérapie concomitante (choix multiples possibles)</legend>
+          <legend class="label">${loc.chemoAgentsExclusive ? 'Type de chimiothérapie (un seul choix)' : 'Chimiothérapie concomitante (choix multiples possibles)'}</legend>
           ${checkboxList('agents', loc.chemoAgents, state.agents)}
         </fieldset>` : ''}
 
@@ -268,7 +279,7 @@ function renderOptions() {
 
 function validateOptions() {
   const loc = getLoc();
-  if (state.chemo && loc.chemoAgents && !loc.chemoAgents.some((a) => state.agents[a.id])) {
+  if (agentsMenuActive() && !loc.chemoAgentsOptional && !selectedAgents().length) {
     return ['Choisir au moins un traitement de chimiothérapie concomitante.'];
   }
   return [];
@@ -279,7 +290,11 @@ function validateOptions() {
 function buildContent() {
   const loc = getLoc();
   const r = loc.build({
-    rtType: state.rtType, chemo: state.chemo, opts: state.opts, agents: state.agents, freeExams: state.freeExams,
+    rtType: state.rtType,
+    chemo: state.chemo,
+    opts: state.opts,
+    agents: Object.fromEntries(selectedAgents().map((a) => [a.id, true])),
+    freeExams: state.freeExams,
   });
   const exams = [...r.exams];
   if (state.dai) {
@@ -310,7 +325,7 @@ function apptRows(content, sched) {
     });
     rows.push({
       id: 'blood',
-      name: 'Prise de sang hebdomadaire, 48 h avant chaque chimiothérapie',
+      name: 'Prise de sang hebdomadaire, 48 h avant chaque chimiothérapie (le vendredi si cela tombe un week-end)',
       derived: sched.firstBlood && sched.hasDates ? `1re le ${formatDate(sched.firstBlood)}` : '48 h avant J1',
       placeholder: 'Laboratoire',
     });
@@ -334,6 +349,7 @@ function scheduleParams() {
     startDate: apptValue('start').date,
     chemo: !!state.chemo,
     chemoInterval: r ? r.interval : null,
+    chemoCycleDays: (selectedAgents().find((a) => a.cycleDays) || {}).cycleDays,
     dailyChemoEveryDay: !!getLoc().dailyChemoEveryDay,
   };
 }
@@ -708,6 +724,10 @@ app.addEventListener('change', (e) => {
   } else if (t.type === 'checkbox' && t.dataset.toggle) {
     state[t.dataset.toggle] = t.checked;
     renderForm();
+  } else if (t.type === 'checkbox' && t.dataset.group === 'agents' && getLoc().chemoAgentsExclusive) {
+    // Choix unique, mais décochable (aucun choix = protocole par défaut)
+    state.agents = t.checked ? { [t.value]: true } : {};
+    renderOptions();
   } else if (t.type === 'checkbox' && t.dataset.group) {
     state[t.dataset.group][t.value] = t.checked;
     t.closest('.check').classList.toggle('checked', t.checked);

@@ -48,5 +48,9 @@ ORL → ORL, Thorax → Poumon, Abdomen → Pancréas, Pelvis → Rectum.
   Pas de chimiothérapie concomitante ni de prise de sang associée pendant la pause.
 - Chimiothérapie : débute le jour de la 1re séance, puis selon le rythme (quotidienne = chaque jour
   de radiothérapie ; hebdomadaire / Q2W / Q3W / Q4W = tous les 7 / 14 / 21 / 28 jours), jusqu’à la
-  dernière séance. Prise de sang hebdomadaire, 48 h avant chaque échéance hebdomadaire.
+  dernière séance. Prise de sang hebdomadaire, 48 h avant chaque échéance hebdomadaire, avancée au
+  vendredi si elle tombe un week-end.
+- Poumon en Q3W : Platine Pemetrexed (ou aucun choix) = J1 tous les 21 jours ; Platine Navelbine = J1 et J8,
+  reprise à J22 ; Platine Etoposide = 3 jours de suite (J1-J3) à chaque cure.
+- Crâne : chimiothérapie quotidienne (Temodal) 7 jours sur 7 entre la 1re et la dernière séance.
 - Les jours fériés ne sont pas exclus (mention « schéma indicatif » sur le document).

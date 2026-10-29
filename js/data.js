@@ -3,7 +3,8 @@
  * examens pré-thérapeutiques, effets secondaires et conduites à tenir.
  *
  * Pour compléter une localisation, renseigner `options`, `chemoAgents`
- * (facultatif) et la fonction `build(s)` qui reçoit l'état du formulaire :
+ * (facultatif ; options : chemoAgentsWhen, chemoAgentsExclusive, chemoAgentsOptional,
+ * cycleDays par molécule) et la fonction `build(s)` qui reçoit l'état du formulaire :
  *   s.rtType       'stereo' | 'hypo' | 'conv' | 'bifract'
  *   s.chemo        booléen (chimiothérapie concomitante)
  *   s.opts         { idOption: true/false }
@@ -128,6 +129,9 @@ const FX = {
   muciteVaginale: ['Mucite vaginale', 'Inflammation de l’intérieur du vagin : irritation, brûlures, pertes.'],
   menopause: ['Ménopause induite', 'Arrêt du fonctionnement des ovaires : arrêt des règles, bouffées de chaleur, sécheresse vaginale.'],
   malabsorption: ['Malabsorption', 'L’intestin peut moins bien absorber certains aliments ou vitamines, ce qui peut entraîner diarrhée et carences.'],
+  fauxBesoins: ['Faux besoins', 'Envies pressantes d’aller à la selle sans résultat, alors que le rectum est vide.'],
+  muciteXeloda: ['Mucite', 'Inflammation de l’intérieur de la bouche : rougeurs, aphtes, douleurs.'],
+  mainPied: ['Syndrome main-pied', 'Rougeur, gonflement, sécheresse ou douleur de la paume des mains et de la plante des pieds. Hydrater la peau et prévenir le médecin si cela devient gênant.'],
   troublesDigestifs: ['Troubles digestifs', 'Selles irrégulières, ballonnements ou envies pressantes pouvant persister.'],
 };
 
@@ -139,6 +143,7 @@ const CISPLATINE_FX = {
 };
 const IMMUNO_FX = { acute: ['immuno'], late: [] };
 const XELODA_FX = { acute: ['diarrhee', 'bilanHepatique'], late: [] };
+const XELODA_PELVIS_FX = { acute: ['nausees', 'diarrhee', 'bilanHepatique', 'muciteXeloda', 'mainPied'], late: [] };
 
 const CONDUCT = {
   alimentation: 'En cas de difficultés à vous alimenter ou de perte de poids, prévenir le médecin.',
@@ -340,6 +345,15 @@ const LOCALISATIONS = [
       { id: 'ultracentrale', label: 'Tumeur ultra-centrale', hint: 'stéréotaxie' },
       { id: 'parietal', label: 'Contact pariétal', hint: 'stéréotaxie' },
     ],
+    // Protocole de chimiothérapie, proposé seulement pour un rythme Q3W ; sans choix = J1 tous les 21 jours
+    chemoAgentsWhen: (s) => s.chemoRhythm === 'q3w',
+    chemoAgentsExclusive: true,
+    chemoAgentsOptional: true,
+    chemoAgents: [
+      { id: 'platPemetrexed', label: 'Platine Pemetrexed', cycleDays: [0] },
+      { id: 'platNavelbine', label: 'Platine Navelbine', cycleDays: [0, 7] },
+      { id: 'platEtoposide', label: 'Platine Etoposide', cycleDays: [0, 1, 2] },
+    ],
     build(s) {
       const o = s.opts;
       const stereo = s.rtType === 'stereo';
@@ -398,10 +412,10 @@ const LOCALISATIONS = [
     build(s) {
       const r = emptyBuild();
       if (s.opts.irm) r.exams.push('IRM');
-      r.acute = ['diarrhee', 'cystite'];
+      r.acute = ['diarrhee', 'cystite', 'rectite', 'fauxBesoins'];
       r.late = ['diarrheeTard'];
       if (s.chemo) {
-        r.systemic.push({ type: 'chimio', name: 'Xeloda', ...XELODA_FX });
+        r.systemic.push({ type: 'chimio', name: 'Xeloda', ...XELODA_PELVIS_FX });
         r.instructions.push(INSTRUCTIONS.xeloda);
       }
       return r;
@@ -416,11 +430,13 @@ const LOCALISATIONS = [
       const o = s.opts;
       const r = emptyBuild();
       if (o.irm) r.exams.push('IRM');
-      r.acute = ['diarrhee', 'cystite', 'dermiteSevere'];
+      r.acute = ['diarrhee', 'cystite', 'dermiteSevere', 'rectite', 'fauxBesoins'];
       r.late = ['diarrheeTard', 'alopecieLocaleTard'];
       if (o.femme) r.late.push('secheresseVaginale', 'synechies');
-      if (s.chemo) {
-        r.systemic.push({ type: 'chimio', name: o.xeloda ? 'Xeloda' : 'Chimiothérapie', acute: ['nausees', 'diarrhee', 'bilanHepatique'], late: [] });
+      if (o.xeloda) {
+        r.systemic.push({ type: 'chimio', name: 'Xeloda', ...XELODA_PELVIS_FX });
+      } else if (s.chemo) {
+        r.systemic.push({ type: 'chimio', name: 'Chimiothérapie', acute: ['nausees', 'diarrhee', 'bilanHepatique'], late: [] });
       }
       if (o.xeloda) r.instructions.push(INSTRUCTIONS.xeloda);
       return r;

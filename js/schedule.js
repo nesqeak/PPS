@@ -47,6 +47,8 @@ function formatShort(date) {
  * @param {string} [p.startDate]       AAAA-MM-JJ ; sinon calendrier relatif
  * @param {boolean} p.chemo
  * @param {number|null} p.chemoInterval jours entre deux cures (1 = quotidienne, null = J1 seulement)
+ * @param {number[]} [p.chemoCycleDays] jours de chaque cure, en décalage depuis J1 (défaut [0] ;
+ *                                     ex. [0, 1, 2] = 3 jours de suite, [0, 7] = J1 J8)
  * @param {boolean} [p.dailyChemoEveryDay] chimiothérapie quotidienne aussi les jours sans séance (week-ends inclus)
  * @param {number} [p.splitAfter]      split course : nombre de séances du temps 1 (0 = pas de split)
  * @param {number} [p.splitPause]      split course : durée de la pause en jours après la dernière séance du temps 1
@@ -96,7 +98,10 @@ function computeSchedule(p) {
     if (p.chemoInterval === 1 && !p.dailyChemoEveryDay) {
       treatment.forEach((t) => chemoDays.push(t.date));
     } else if (p.chemoInterval) {
-      for (let c = new Date(start); c <= lastDay; c = addDays(c, p.chemoInterval)) chemoDays.push(c);
+      const offsets = p.chemoCycleDays && p.chemoCycleDays.length ? p.chemoCycleDays : [0];
+      for (let c = new Date(start); c <= lastDay; c = addDays(c, p.chemoInterval)) {
+        offsets.forEach((o) => chemoDays.push(addDays(c, o)));
+      }
     } else {
       chemoDays.push(new Date(start));
     }
@@ -104,16 +109,20 @@ function computeSchedule(p) {
   }
   // Pas de chimiothérapie concomitante ni de bilan associé pendant la pause du split course
   const keptChemo = chemoDays.filter((c) => !inPause(c));
-  const keptBlood = bloodDays.filter((b) => !inPause(addDays(b, 2)));
+  // Prise de sang jamais le week-end : avancée au vendredi précédent
+  const keptBlood = bloodDays.filter((b) => !inPause(addDays(b, 2)))
+    .map((b) => (b.getDay() === 6 ? addDays(b, -1) : b.getDay() === 0 ? addDays(b, -2) : b));
 
   const rtMap = new Map(treatment.map((t) => [dayKey(t.date), t]));
   const chemoSet = new Set(keptChemo.map(dayKey));
   const bloodSet = new Set(keptBlood.map(dayKey));
 
   const firstDay = keptBlood.length ? keptBlood[0] : start;
+  // Une cure commencée pendant la radiothérapie peut se terminer après la dernière séance
+  const gridEnd = keptChemo.reduce((m, c) => (c > m ? c : m), lastDay);
   const startWeek = mondayOf(start);
   const weeks = [];
-  for (let w = mondayOf(firstDay); w <= lastDay; w = addDays(w, 7)) {
+  for (let w = mondayOf(firstDay); w <= gridEnd; w = addDays(w, 7)) {
     const idx = Math.round((w - startWeek) / (7 * DAY_MS));
     const days = [];
     let count = 0;
