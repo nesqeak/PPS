@@ -15,7 +15,17 @@ Ouvrir `index.html` dans un navigateur (ou publier le dossier sur un serveur web
    le document se met à jour en direct.
 5. **Télécharger le PDF** (A4, 2 pages) ou **Imprimer**.
 
-Aucune donnée n’est enregistrée ni envoyée : tout reste dans la page du navigateur.
+## Confidentialité
+
+Aucune donnée saisie (identité, dates, lieux, options) n’est enregistrée ni envoyée :
+- pas de cookie, de `localStorage`, de `sessionStorage`, d’IndexedDB, de cache ni de service worker ;
+- aucune requête réseau autre que le chargement des fichiers du site (le PDF est fabriqué dans le
+  navigateur, le logo est intégré) ;
+- la saisie automatique du navigateur est désactivée sur tous les champs (`autocomplete="off"`) ;
+- les données disparaissent en rechargeant la page, en revenant à l’accueil ou en fermant l’onglet.
+
+Seul le PDF téléchargé (ou imprimé) contient les données : il est enregistré là où le navigateur
+place les téléchargements, et son nom contient le nom du patient.
 
 ## Organisation
 

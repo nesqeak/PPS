@@ -91,6 +91,12 @@ function radioGroup(name, options, value) {
 const YES_NO = [{ id: 'oui', label: 'Oui' }, { id: 'non', label: 'Non' }];
 const yn = (v) => (v === null ? '' : v ? 'oui' : 'non');
 
+// Confidentialité : empêche le navigateur de mémoriser les saisies (noms, dates, lieux…)
+// pour les proposer ensuite à un autre patient, ou de les restaurer après fermeture.
+function disableAutofill(root) {
+  root.querySelectorAll('input, textarea, select').forEach((el) => el.setAttribute('autocomplete', 'off'));
+}
+
 function setBreadcrumb() {
   const parts = [];
   if (state.loc) parts.push(`<button type="button" data-action="go" data-view="form">${esc(locLabel())}</button>`);
@@ -202,6 +208,7 @@ function renderForm() {
         <button type="submit" class="btn primary">Valider la fiche</button>
       </div>
     </form>`;
+  disableAutofill(app);
 }
 
 function validateForm() {
@@ -275,6 +282,7 @@ function renderOptions() {
         <button type="submit" class="btn primary">Valider et afficher le PPS</button>
       </div>
     </form>`;
+  disableAutofill(app);
 }
 
 function validateOptions() {
@@ -437,6 +445,7 @@ function renderEditor() {
 
     <h2>Conduite à tenir complémentaire</h2>
     <textarea data-path="extraConduct" rows="3" placeholder="Une consigne par ligne">${esc(state.extraConduct)}</textarea>`;
+  disableAutofill(ed);
 }
 
 function setPath(path, value) {
