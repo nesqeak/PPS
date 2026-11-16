@@ -25,7 +25,7 @@ Aucune donnée saisie (identité, dates, lieux, options) n’est enregistrée ni
 - les données disparaissent en rechargeant la page, en revenant à l’accueil ou en fermant l’onglet.
 
 Seul le PDF téléchargé (ou imprimé) contient les données : il est enregistré là où le navigateur
-place les téléchargements, et son nom contient le nom du patient.
+place les téléchargements. Son nom ne contient que la date (`PPS_AAAA-MM-JJ.pdf`), pas l’identité du patient.
 
 ## Organisation
 

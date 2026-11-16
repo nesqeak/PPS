@@ -662,9 +662,9 @@ async function exportPdf(btn) {
       if (i > 0) pdf.addPage();
       pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, 210, 297);
     }
-    const who = [state.patient.nom, state.patient.prenom].filter(Boolean).join('_').replace(/\s+/g, '_');
     const today = new Date().toISOString().slice(0, 10);
-    pdf.save(`PPS_${who || 'patient'}_${today}.pdf`);
+    // Pas de nom de patient dans le nom du fichier (confidentialité)
+    pdf.save(`PPS_${today}.pdf`);
   } catch (e) {
     console.error(e);
     window.print();
