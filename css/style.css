@@ -207,6 +207,14 @@ textarea { resize: vertical; }
 .editor .appt-head { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
 .editor .appt-head input { padding: 6px 8px; }
 .editor .curie-appt { margin-top: 8px; }
+.fx-picker { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; }
+.fx-picker summary { cursor: pointer; font-weight: 600; color: var(--ink); }
+.fx-picker[open] summary { margin-bottom: 6px; }
+.fx-group { margin: 8px 0; }
+.fx-group-title { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; margin-bottom: 2px; }
+.editor .fx-item { display: flex; align-items: flex-start; gap: 8px; color: var(--ink); font-size: 14px; margin: 0; padding: 3px 0; cursor: pointer; }
+.editor .fx-item input { flex: none; width: 15px; height: 15px; padding: 0; margin: 2px 0 0; accent-color: var(--accent); }
+.fx-item input:not(:checked) + span { color: var(--muted); text-decoration: line-through; }
 .editor .doc-option { color: var(--ink); font-size: 14px; margin-bottom: 4px; }
 .free-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
 .free-row { display: flex; gap: 6px; align-items: center; }

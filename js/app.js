@@ -35,6 +35,8 @@ function newState() {
     extraEffects: [], // { kind: 'acute'|'late', effect, explain }
     extraConduct: '',
     hideSchedule: false, // masque le calendrier semaine par semaine dans le PPS
+    hiddenFx: {}, // effets secondaires retirés à la main : clé fxKey() -> true
+    fxPanelOpen: false,
   };
 }
 
@@ -433,6 +435,9 @@ function renderEditor() {
       <label>Lieu<input data-path="appts.curie.lieu" value="${esc(apptValue('curie').lieu)}"></label>
     </div>` : ''}
 
+    <h2>Effets secondaires du PPS</h2>
+    ${fxPickerHtml(content)}
+
     <h2>Effets secondaires complémentaires</h2>
     ${state.extraEffects.map((e, i) => `
       <div class="appt">
@@ -513,6 +518,67 @@ function fxRows(kindLabel, keys, extra) {
     </tr>`).join('');
 }
 
+/* ---------- Retrait manuel d'effets secondaires ---------- */
+
+const fxKey = (scope, kind, key) => `${scope}|${kind}|${key}`;
+
+// Liste des effets du PPS par bloc : radiothérapie puis chaque molécule
+function fxGroups(content) {
+  const groups = [
+    { title: 'Radiothérapie – aigus', scope: 'rt', kind: 'acute', keys: content.acute },
+    { title: 'Radiothérapie – tardifs', scope: 'rt', kind: 'late', keys: content.late },
+  ];
+  content.systemic.forEach((g) => {
+    const type = g.type === 'hormono' ? 'hormonothérapie' : 'chimiothérapie';
+    groups.push({ title: `${g.name} (${type}) – ${g.acuteLabel ? g.acuteLabel.toLowerCase() : 'aigus'}`, scope: g.name, kind: 'acute', keys: g.acute });
+    groups.push({ title: `${g.name} (${type}) – tardifs`, scope: g.name, kind: 'late', keys: g.late });
+  });
+  return groups.filter((g) => g.keys.length);
+}
+
+function fxCounts(content) {
+  let total = 0;
+  let shown = 0;
+  fxGroups(content).forEach((g) => g.keys.forEach((k) => {
+    total += 1;
+    if (!state.hiddenFx[fxKey(g.scope, g.kind, k)]) shown += 1;
+  }));
+  return { total, shown };
+}
+
+function fxPickerHtml(content) {
+  const groups = fxGroups(content);
+  if (!groups.length) return '<p class="muted small">Aucun effet secondaire prédéfini pour cette localisation.</p>';
+  const { total, shown } = fxCounts(content);
+  return `
+    <details class="fx-picker" ${state.fxPanelOpen ? 'open' : ''}>
+      <summary>Décocher pour retirer du PPS <span id="fx-count" class="muted">(${shown}/${total} affichés)</span></summary>
+      ${groups.map((g) => `
+        <div class="fx-group">
+          <div class="fx-group-title">${esc(g.title)}</div>
+          ${g.keys.map((k) => {
+            const key = fxKey(g.scope, g.kind, k);
+            const on = !state.hiddenFx[key];
+            return `<label class="fx-item"><input type="checkbox" data-fx="${esc(key)}" ${on ? 'checked' : ''}><span>${esc(FX[k][0])}</span></label>`;
+          }).join('')}
+        </div>`).join('')}
+      ${shown < total ? '<button type="button" class="btn ghost small" data-action="show-all-fx">Tout réafficher</button>' : ''}
+    </details>`;
+}
+
+// Contenu du PPS sans les effets retirés à la main
+function visibleContent(c) {
+  const keep = (scope, kind) => (k) => !state.hiddenFx[fxKey(scope, kind, k)];
+  return {
+    ...c,
+    acute: c.acute.filter(keep('rt', 'acute')),
+    late: c.late.filter(keep('rt', 'late')),
+    systemic: c.systemic
+      .map((g) => ({ ...g, acute: g.acute.filter(keep(g.name, 'acute')), late: g.late.filter(keep(g.name, 'late')) }))
+      .filter((g) => g.acute.length + g.late.length),
+  };
+}
+
 function systemicTable(type, title, groups) {
   const list = groups.filter((g) => g.type === type);
   if (!list.length) return '';
@@ -530,7 +596,7 @@ function systemicTable(type, title, groups) {
 }
 
 function renderDocument() {
-  const content = buildContent();
+  const content = visibleContent(buildContent());
   const params = scheduleParams();
   const sched = computeSchedule(params);
   const rows = apptRows(content, sched);
@@ -719,6 +785,10 @@ document.addEventListener('click', (e) => {
     state.freeExams.splice(Number(el.dataset.i), 1);
     if (!state.freeExams.length) state.freeExams.push('');
     renderOptions();
+  } else if (action === 'show-all-fx') {
+    state.hiddenFx = {};
+    renderEditor();
+    renderDocument();
   } else if (action === 'add-effect') {
     state.extraEffects.push({ kind: 'acute', effect: '', explain: '' });
     renderEditor();
@@ -731,7 +801,13 @@ document.addEventListener('click', (e) => {
 
 app.addEventListener('change', (e) => {
   const t = e.target;
-  if (t.type === 'radio') {
+  if (t.type === 'checkbox' && t.dataset.fx) {
+    if (t.checked) delete state.hiddenFx[t.dataset.fx];
+    else state.hiddenFx[t.dataset.fx] = true;
+    const { total, shown } = fxCounts(buildContent());
+    document.getElementById('fx-count').textContent = `(${shown}/${total} affichés)`;
+    renderDocument();
+  } else if (t.type === 'radio') {
     const v = t.value;
     if (['chemo', 'pause', 'dai'].includes(t.name)) state[t.name] = v === 'oui';
     else if (t.name === 'daysPerWeek') state.daysPerWeek = Number(v);
@@ -780,6 +856,11 @@ app.addEventListener('submit', (e) => {
   state.view = e.target.id === 'form-main' ? 'options' : 'pps';
   render();
 });
+
+// Mémorise l'ouverture du menu des effets (l'éditeur est parfois redessiné) ; « toggle » ne remonte pas
+app.addEventListener('toggle', (e) => {
+  if (e.target.classList && e.target.classList.contains('fx-picker')) state.fxPanelOpen = e.target.open;
+}, true);
 
 window.addEventListener('resize', () => { if (state.view === 'pps') fitPages(); });
 
