@@ -34,6 +34,7 @@ function newState() {
     extraAppts: [], // { name, date, time, lieu }
     extraEffects: [], // { kind: 'acute'|'late', effect, explain }
     extraConduct: '',
+    hideSchedule: false, // masque le calendrier semaine par semaine dans le PPS
   };
 }
 
@@ -386,6 +387,12 @@ function renderEditor() {
   const rows = apptRows(content, sched);
   const ed = document.getElementById('editor');
   ed.innerHTML = `
+    <h2>Affichage</h2>
+    <label class="check doc-option ${state.hideSchedule ? 'checked' : ''}">
+      <input type="checkbox" data-doc-toggle="hideSchedule" ${state.hideSchedule ? 'checked' : ''}>
+      <span>Masquer le calendrier de traitement</span>
+    </label>
+
     <h2>Patient</h2>
     <div class="grid2">
       <label>Nom<input data-path="patient.nom" value="${esc(state.patient.nom)}"></label>
@@ -595,10 +602,10 @@ function renderDocument() {
         <b>Consignes pour le traitement</b>
         ${content.instructions.map((c) => `<p>${esc(c)}</p>`).join('')}
       </div>` : ''}
-      ${scheduleHtml(sched)}
+      ${state.hideSchedule ? '' : scheduleHtml(sched)}
       ${content.curie ? `<p class="curie"><b>Curiethérapie :</b> ${apptCell(apptValue('curie'))}${apptValue('curie').lieu ? ` – ${esc(apptValue('curie').lieu)}` : ''}</p>` : ''}
       ${state.pause ? `<p class="pause"><b>Pause prévue dans le traitement systémique :</b> ${esc(state.pauseDetails || 'modalités à préciser')}</p>` : ''}
-      <p class="foot-note">Schéma indicatif : les dates peuvent être modifiées (jours fériés, maintenance des appareils, tolérance du traitement).</p>
+      <p class="foot-note">${state.hideSchedule ? 'Dates indicatives' : 'Schéma indicatif'} : les dates peuvent être modifiées (jours fériés, maintenance des appareils, tolérance du traitement).</p>
     </div></div>`;
 
   const page2 = `
@@ -730,6 +737,10 @@ app.addEventListener('change', (e) => {
     else if (t.name === 'daysPerWeek') state.daysPerWeek = Number(v);
     else state[t.name] = v;
     renderForm();
+  } else if (t.type === 'checkbox' && t.dataset.docToggle) {
+    state[t.dataset.docToggle] = t.checked;
+    t.closest('.check').classList.toggle('checked', t.checked);
+    renderDocument();
   } else if (t.type === 'checkbox' && t.dataset.toggle) {
     state[t.dataset.toggle] = t.checked;
     renderForm();
