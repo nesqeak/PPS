@@ -360,7 +360,7 @@ function scheduleParams() {
     startDate: apptValue('start').date,
     chemo: !!state.chemo,
     chemoInterval: r ? r.interval : null,
-    chemoCycleDays: (selectedAgents().find((a) => a.cycleDays) || {}).cycleDays,
+    chemoCycleDays: (selectedAgents().find((a) => a.cycleDays) || {}).cycleDays || (r && r.cycleDays),
     dailyChemoEveryDay: !!getLoc().dailyChemoEveryDay,
   };
 }

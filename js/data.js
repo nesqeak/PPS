@@ -26,6 +26,8 @@ const CHEMO_RHYTHMS = [
   { id: 'q2w', label: 'Q2W', long: 'toutes les 2 semaines (Q2W)', interval: 14 },
   { id: 'q3w', label: 'Q3W', long: 'toutes les 3 semaines (Q3W)', interval: 21 },
   { id: 'q4w', label: 'Q4W', long: 'toutes les 4 semaines (Q4W)', interval: 28 },
+  // 2 semaines sur 3 : J1 et J8, reprise à J22 (nouveau cycle de 21 jours)
+  { id: 'j1j8', label: 'J1 J8 J21', long: 'J1 J8, reprise J21 (2 semaines sur 3)', interval: 21, cycleDays: [0, 7] },
   { id: 'autre', label: 'Autre', interval: null },
 ];
 
